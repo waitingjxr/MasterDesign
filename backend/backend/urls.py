@@ -24,5 +24,6 @@ urlpatterns = [
     path('api/section_point/queryDisplacementData', section_point.query_displacement_change_data),
     path('api/section_point/queryScatterData', section_point.query_scatter_data),
     path('api/section_point/querySpaceDisplacementData', section_point.query_space_displacement_data),
-    path('api/section_point/queryAllStationLatestData', section_point.query_all_station_latest_data)
+    path('api/section_point/queryAllStationLatestData', section_point.query_all_station_latest_data),
+    path('api/section_point/queryMineAllStationLatestData', section_point.query_mine_all_stations),
 ]

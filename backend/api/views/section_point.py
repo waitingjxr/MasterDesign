@@ -1,7 +1,7 @@
 import math
 
 from django.http import HttpResponse, JsonResponse
-import json, decimal
+import json
 from django.db.models import Max, Min
 from django.views.decorators.csrf import csrf_exempt
 from api.models import SectionPoint, XaStationsData, XyStationsData, JdStationsData
@@ -41,7 +41,6 @@ def query_all_section_point(request):
 @csrf_exempt
 def query_displacement_change_data(request):
     dot_name = request.POST.get("dot_name")
-    time_type = request.POST.get("time_type")
     start_date = request.POST.get("start_date")
     end_date = request.POST.get("end_date")
     if dot_name[0:2] == 'XA':
@@ -79,42 +78,10 @@ def query_displacement_change_data(request):
 @csrf_exempt
 def query_scatter_data(request):
     dot_name = request.POST.get("dot_name")
-    time_type = request.POST.get("time_type")
     start_date = request.POST.get("start_date")
     end_date = request.POST.get("end_date")
-    if dot_name[0:2] == 'XA':
-        query_data = XaStationsData.objects.filter(stationname=dot_name, starttime__range=[start_date, end_date]).all()
-        dataX_min = query_data.aggregate(Min('x'))
-        dataX_max = query_data.aggregate(Max('x'))
-        dataY_min = query_data.aggregate(Min('y'))
-        dataY_max = query_data.aggregate(Max('y'))
-        dataDX_min = query_data.aggregate(Min('dx'))
-        dataDX_max = query_data.aggregate(Max('dx'))
-        dataDY_min = query_data.aggregate(Min('dy'))
-        dataDY_max = query_data.aggregate(Max('dy'))
-        serializer = XaStationsDataSerializer(query_data, many=True)
-    elif dot_name[0:2] == 'XY':
-        query_data = XyStationsData.objects.filter(stationname=dot_name, starttime__range=[start_date, end_date]).all()
-        dataX_min = query_data.aggregate(Min('x'))
-        dataX_max = query_data.aggregate(Max('x'))
-        dataY_min = query_data.aggregate(Min('y'))
-        dataY_max = query_data.aggregate(Max('y'))
-        dataDX_min = query_data.aggregate(Min('dx'))
-        dataDX_max = query_data.aggregate(Max('dx'))
-        dataDY_min = query_data.aggregate(Min('dy'))
-        dataDY_max = query_data.aggregate(Max('dy'))
-        serializer = XyStationsDataSerializer(query_data, many=True)
-    else:
-        query_data = JdStationsData.objects.filter(stationname=dot_name, starttime__range=[start_date, end_date]).all()
-        dataX_min = query_data.aggregate(Min('x'))
-        dataX_max = query_data.aggregate(Max('x'))
-        dataY_min = query_data.aggregate(Min('y'))
-        dataY_max = query_data.aggregate(Max('y'))
-        dataDX_min = query_data.aggregate(Min('dx'))
-        dataDX_max = query_data.aggregate(Max('dx'))
-        dataDY_min = query_data.aggregate(Min('dy'))
-        dataDY_max = query_data.aggregate(Max('dy'))
-        serializer = JdStationsDataSerializer(query_data, many=True)
+    query_data, x_min, x_max, y_min, y_max, h_min, h_max, dx_min, dx_max, dy_min, dy_max, dh_min, dh_max, serializer \
+        = query_mine_station(dot_name, start_date, end_date)
     if not serializer.data:
         return JsonResponse(
             {
@@ -131,18 +98,18 @@ def query_scatter_data(request):
                 'id': count,
                 'title': '起始点',
                 'category': '起始点',
-                'X': round(float(serializer.data[0]['x']), 4),
-                'Y': round(float(serializer.data[0]['y']), 4),
-                'N方向': round(float(serializer.data[0]['dx']) * 1000, 1),
-                'E方向': round(float(serializer.data[0]['dy']) * 1000, 1),
-                'dataX_min': round(float(dataX_min['x__min']), 4),
-                'dataX_max': round(float(dataX_max['x__max']), 4),
-                'dataY_min': round(float(dataY_min['y__min']), 4),
-                'dataY_max': round(float(dataY_max['y__max']), 4),
-                'dataDX_min': round(float(dataDX_min['dx__min']) * 1000, 1),
-                'dataDX_max': round(float(dataDX_max['dx__max']) * 1000, 1),
-                'dataDY_min': round(float(dataDY_min['dy__min']) * 1000, 1),
-                'dataDY_max': round(float(dataDY_max['dy__max']) * 1000, 1),
+                'X': round(float(serializer.data[count]['x']), 4),
+                'Y': round(float(serializer.data[count]['y']), 4),
+                'N方向': round(float(serializer.data[count]['dx']) * 1000, 1),
+                'E方向': round(float(serializer.data[count]['dy']) * 1000, 1),
+                'x_min': round(float(x_min['x__min']), 4),
+                'x_max': round(float(x_max['x__max']), 4),
+                'y_min': round(float(y_min['y__min']), 4),
+                'y_max': round(float(y_max['y__max']), 4),
+                'dx_min': round(float(dx_min['dx__min']) * 1000, 1),
+                'dx_max': round(float(dx_max['dx__max']) * 1000, 1),
+                'dy_min': round(float(dy_min['dy__min']) * 1000, 1),
+                'dy_max': round(float(dy_max['dy__max']) * 1000, 1),
             }
             station_data_list.append(temp)
             count += 1
@@ -155,14 +122,14 @@ def query_scatter_data(request):
                 'Y': round(float(serializer.data[-1]['y']), 4),
                 'N方向': round(float(serializer.data[-1]['dx']) * 1000, 1),
                 'E方向': round(float(serializer.data[-1]['dy']) * 1000, 1),
-                'dataX_min': round(float(dataX_min['x__min']), 4),
-                'dataX_max': round(float(dataX_max['x__max']), 4),
-                'dataY_min': round(float(dataY_min['y__min']), 4),
-                'dataY_max': round(float(dataY_max['y__max']), 4),
-                'dataDX_min': round(float(dataDX_min['dx__min']) * 1000, 1),
-                'dataDX_max': round(float(dataDX_max['dx__max']) * 1000, 1),
-                'dataDY_min': round(float(dataDY_min['dy__min']) * 1000, 1),
-                'dataDY_max': round(float(dataDY_max['dy__max']) * 1000, 1),
+                'x_min': round(float(x_min['x__min']), 4),
+                'x_max': round(float(x_max['x__max']), 4),
+                'y_min': round(float(y_min['y__min']), 4),
+                'y_max': round(float(y_max['y__max']), 4),
+                'dx_min': round(float(dx_min['dx__min']) * 1000, 1),
+                'dx_max': round(float(dx_max['dx__max']) * 1000, 1),
+                'dy_min': round(float(dy_min['dy__min']) * 1000, 1),
+                'dy_max': round(float(dy_max['dy__max']) * 1000, 1),
             }
             station_data_list.append(temp)
             break
@@ -174,14 +141,14 @@ def query_scatter_data(request):
             'Y': round(float(i['y']), 4),
             'N方向': round(float(i['dx']) * 1000, 1),
             'E方向': round(float(i['dy']) * 1000, 1),
-            'dataX_min': round(float(dataX_min['x__min']), 4),
-            'dataX_max': round(float(dataX_max['x__max']), 4),
-            'dataY_min': round(float(dataY_min['y__min']), 4),
-            'dataY_max': round(float(dataY_max['y__max']), 4),
-            'dataDX_min': round(float(dataDX_min['dx__min']) * 1000, 1),
-            'dataDX_max': round(float(dataDX_max['dx__max']) * 1000, 1),
-            'dataDY_min': round(float(dataDY_min['dy__min']) * 1000, 1),
-            'dataDY_max': round(float(dataDY_max['dy__max']) * 1000, 1),
+            'x_min': round(float(x_min['x__min']), 4),
+            'x_max': round(float(x_max['x__max']), 4),
+            'y_min': round(float(y_min['y__min']), 4),
+            'y_max': round(float(y_max['y__max']), 4),
+            'dx_min': round(float(dx_min['dx__min']) * 1000, 1),
+            'dx_max': round(float(dx_max['dx__max']) * 1000, 1),
+            'dy_min': round(float(dy_min['dy__min']) * 1000, 1),
+            'dy_max': round(float(dy_max['dy__max']) * 1000, 1),
         }
         station_data_list.append(temp)
         count += 1
@@ -196,54 +163,75 @@ def query_scatter_data(request):
 @csrf_exempt
 def query_space_displacement_data(request):
     dot_name = request.POST.get("dot_name")
-    time_type = request.POST.get("time_type")
     start_date = request.POST.get("start_date")
     end_date = request.POST.get("end_date")
-    if dot_name[0:2] == 'XA':
-        query_data = XaStationsData.objects.filter(stationname=dot_name, starttime__range=[start_date, end_date]).all()
-        dataX_min = query_data.aggregate(Min('x'))
-        dataX_max = query_data.aggregate(Max('x'))
-        dataY_min = query_data.aggregate(Min('y'))
-        dataY_max = query_data.aggregate(Max('y'))
-        dataH_min = query_data.aggregate(Min('h'))
-        dataH_max = query_data.aggregate(Max('h'))
-        serializer = XaStationsDataSerializer(query_data, many=True)
-    elif dot_name[0:2] == 'XY':
-        query_data = XyStationsData.objects.filter(stationname=dot_name, starttime__range=[start_date, end_date]).all()
-        dataX_min = query_data.aggregate(Min('x'))
-        dataX_max = query_data.aggregate(Max('x'))
-        dataY_min = query_data.aggregate(Min('y'))
-        dataY_max = query_data.aggregate(Max('y'))
-        dataH_min = query_data.aggregate(Min('h'))
-        dataH_max = query_data.aggregate(Max('h'))
-        serializer = XyStationsDataSerializer(query_data, many=True)
-    else:
-        query_data = JdStationsData.objects.filter(stationname=dot_name, starttime__range=[start_date, end_date]).all()
-        dataX_min = query_data.aggregate(Min('x'))
-        dataX_max = query_data.aggregate(Max('x'))
-        dataY_min = query_data.aggregate(Min('y'))
-        dataY_max = query_data.aggregate(Max('y'))
-        dataH_min = query_data.aggregate(Min('h'))
-        dataH_max = query_data.aggregate(Max('h'))
-        serializer = JdStationsDataSerializer(query_data, many=True)
+    query_data, x_min, x_max, y_min, y_max, h_min, h_max, dx_min, dx_max, dy_min, dy_max, dh_min, dh_max, serializer \
+        = query_mine_station(dot_name, start_date, end_date)
     if not serializer.data:
         return HttpResponse("没有查到对应数据！")
-    station_data_list = [
-        ['E方向', 'N方向', 'H方向', 'dataX_min', 'dataX_max', 'dataY_min', 'dataY_max', 'dataH_min', 'dataH_max', 'date'], ]
+    station_data_list = [['id', 'category', 'x', 'y', 'h', 'dx', 'dy', 'dh', 'x_min', 'x_max', 'y_min', 'y_max',
+                          'h_min', 'h_max'], ]
+    # station_data_list = []
+    count = 0
     for i in serializer.data:
-        temp = [
-            i['y'],
-            i['x'],
-            i['h'],
-            dataX_min['x__min'],
-            dataX_max['x__max'],
-            dataY_min['y__min'],
-            dataY_max['y__max'],
-            dataH_min['h__min'],
-            dataH_max['h__max'],
-            i['endtime'],
-        ]
-        station_data_list.append(temp)
+        if count == 0:
+            temp = [
+                count,
+                '起始点',
+                round(float(serializer.data[count]['x']), 4),
+                round(float(serializer.data[count]['y']), 4),
+                round(float(serializer.data[count]['h']), 4),
+                round(float(serializer.data[count]['dx']) * 1000, 1),
+                round(float(serializer.data[count]['dy']) * 1000, 1),
+                round(float(serializer.data[count]['dh']) * 1000, 1),
+                round(float(x_min['x__min']), 4),
+                round(float(x_max['x__max']), 4),
+                round(float(y_min['y__min']), 4),
+                round(float(y_max['y__max']), 4),
+                round(float(h_min['h__min']), 4),
+                round(float(h_max['h__max']), 4),
+            ]
+            station_data_list.append(temp)
+            count += 1
+        elif count == len(serializer.data) - 1:
+
+            temp = [
+                count,
+                '结束点',
+                round(float(serializer.data[-1]['x']), 4),
+                round(float(serializer.data[-1]['y']), 4),
+                round(float(serializer.data[-1]['h']), 4),
+                round(float(serializer.data[count]['dx']) * 1000, 1),
+                round(float(serializer.data[count]['dy']) * 1000, 1),
+                round(float(serializer.data[count]['dh']) * 1000, 1),
+                round(float(x_min['x__min']), 4),
+                round(float(x_max['x__max']), 4),
+                round(float(y_min['y__min']), 4),
+                round(float(y_max['y__max']), 4),
+                round(float(h_min['h__min']), 4),
+                round(float(h_max['h__max']), 4),
+            ]
+            station_data_list.append(temp)
+            break
+        else:
+            temp = [
+                count,
+                '历史点',
+                round(float(i['x']), 4),
+                round(float(i['y']), 4),
+                round(float(i['h']), 4),
+                round(float(i['dx']) * 1000, 1),
+                round(float(i['dy']) * 1000, 1),
+                round(float(i['dh']) * 1000, 1),
+                round(float(x_min['x__min']), 4),
+                round(float(x_max['x__max']), 4),
+                round(float(y_min['y__min']), 4),
+                round(float(y_max['y__max']), 4),
+                round(float(h_min['h__min']), 4),
+                round(float(h_max['h__max']), 4),
+            ]
+            station_data_list.append(temp)
+            count += 1
     return JsonResponse(station_data_list, safe=False)
 
 
@@ -260,13 +248,14 @@ def query_all_station_latest_data(request):
     stations_latest_data = []
     i = 0
     # YX断面1
+    # query_section_stations_data(XyStationsData, XyStationsDataSerializer, xy_section1_stations_name, i)
     for station_name in xy_section1_stations_name:
         query_data = XyStationsData.objects.filter(stationname=station_name).order_by('-dataid')[:1]
         serializer = XyStationsDataSerializer(query_data, many=True)
         dx = float(serializer.data[0]['dx'])
         dy = float(serializer.data[0]['dy'])
         radian = math.atan(math.fabs(dy / dx))
-        angle = radian_to_angle(radian, dx, dy)
+        angle, trans_angle = radian_to_angle(radian, dx, dy)
         i += 1
         temp = {
             'index': i,
@@ -279,7 +268,8 @@ def query_all_station_latest_data(request):
             'dy': round(dy * 1000, 1),
             'dh': round(float(serializer.data[0]['dh']) * 1000, 1),
             'displacement': math.sqrt(math.pow(round(dx * 1000, 1), 2) + math.pow(round(dy * 1000, 1), 2)),
-            'angle': angle
+            'angle': angle,
+            'trans_angle': trans_angle
 
         }
         stations_latest_data.append(temp)
@@ -290,7 +280,7 @@ def query_all_station_latest_data(request):
         dx = float(serializer.data[0]['dx'])
         dy = float(serializer.data[0]['dy'])
         radian = math.atan(math.fabs(dy / dx))
-        angle = radian_to_angle(radian, dx, dy)
+        angle, trans_angle = radian_to_angle(radian, dx, dy)
         i += 1
         temp = {
             'index': i,
@@ -302,7 +292,9 @@ def query_all_station_latest_data(request):
             'dx': round(dx * 1000, 1),
             'dy': round(dy * 1000, 1),
             'dh': round(float(serializer.data[0]['dh']) * 1000, 1),
-            'angle': angle
+            'displacement': math.sqrt(math.pow(round(dx * 1000, 1), 2) + math.pow(round(dy * 1000, 1), 2)),
+            'angle': angle,
+            'trans_angle': trans_angle
 
         }
         stations_latest_data.append(temp)
@@ -313,7 +305,7 @@ def query_all_station_latest_data(request):
         dx = float(serializer.data[0]['dx'])
         dy = float(serializer.data[0]['dy'])
         radian = math.atan(math.fabs(dy / dx))
-        angle = radian_to_angle(radian, dx, dy)
+        angle, trans_angle = radian_to_angle(radian, dx, dy)
         i += 1
         temp = {
             'index': i,
@@ -325,7 +317,9 @@ def query_all_station_latest_data(request):
             'dx': round(dx * 1000, 1),
             'dy': round(dy * 1000, 1),
             'dh': round(float(serializer.data[0]['dh']) * 1000, 1),
-            'angle': angle
+            'displacement': math.sqrt(math.pow(round(dx * 1000, 1), 2) + math.pow(round(dy * 1000, 1), 2)),
+            'angle': angle,
+            'trans_angle': trans_angle
 
         }
         stations_latest_data.append(temp)
@@ -336,7 +330,7 @@ def query_all_station_latest_data(request):
         dx = float(serializer.data[0]['dx'])
         dy = float(serializer.data[0]['dy'])
         radian = math.atan(math.fabs(dy / dx))
-        angle = radian_to_angle(radian, dx, dy)
+        angle, trans_angle = radian_to_angle(radian, dx, dy)
         i += 1
         temp = {
             'index': i,
@@ -348,7 +342,9 @@ def query_all_station_latest_data(request):
             'dx': round(dx * 1000, 1),
             'dy': round(dy * 1000, 1),
             'dh': round(float(serializer.data[0]['dh']) * 1000, 1),
-            'angle': angle
+            'displacement': math.sqrt(math.pow(round(dx * 1000, 1), 2) + math.pow(round(dy * 1000, 1), 2)),
+            'angle': angle,
+            'trans_angle': trans_angle
 
         }
         stations_latest_data.append(temp)
@@ -359,7 +355,7 @@ def query_all_station_latest_data(request):
         dx = float(serializer.data[0]['dx'])
         dy = float(serializer.data[0]['dy'])
         radian = math.atan(math.fabs(dy / dx))
-        angle = radian_to_angle(radian, dx, dy)
+        angle, trans_angle = radian_to_angle(radian, dx, dy)
         i += 1
         temp = {
             'index': i,
@@ -371,7 +367,9 @@ def query_all_station_latest_data(request):
             'dx': round(dx * 1000, 1),
             'dy': round(dy * 1000, 1),
             'dh': round(float(serializer.data[0]['dh']) * 1000, 1),
-            'angle': angle
+            'displacement': math.sqrt(math.pow(round(dx * 1000, 1), 2) + math.pow(round(dy * 1000, 1), 2)),
+            'angle': angle,
+            'trans_angle': trans_angle
 
         }
         stations_latest_data.append(temp)
@@ -382,7 +380,7 @@ def query_all_station_latest_data(request):
         dx = float(serializer.data[0]['dx'])
         dy = float(serializer.data[0]['dy'])
         radian = math.atan(math.fabs(dy / dx))
-        angle = radian_to_angle(radian, dx, dy)
+        angle, trans_angle = radian_to_angle(radian, dx, dy)
         i += 1
         temp = {
             'index': i,
@@ -394,7 +392,9 @@ def query_all_station_latest_data(request):
             'dx': round(dx * 1000, 1),
             'dy': round(dy * 1000, 1),
             'dh': round(float(serializer.data[0]['dh']) * 1000, 1),
-            'angle': angle
+            'displacement': math.sqrt(math.pow(round(dx * 1000, 1), 2) + math.pow(round(dy * 1000, 1), 2)),
+            'angle': angle,
+            'trans_angle': trans_angle
 
         }
         stations_latest_data.append(temp)
@@ -405,7 +405,7 @@ def query_all_station_latest_data(request):
         dx = float(serializer.data[0]['dx'])
         dy = float(serializer.data[0]['dy'])
         radian = math.atan(math.fabs(dy / dx))
-        angle = radian_to_angle(radian, dx, dy)
+        angle, trans_angle = radian_to_angle(radian, dx, dy)
         i += 1
         temp = {
             'index': i,
@@ -417,7 +417,9 @@ def query_all_station_latest_data(request):
             'dx': round(dx * 1000, 1),
             'dy': round(dy * 1000, 1),
             'dh': round(float(serializer.data[0]['dh']) * 1000, 1),
-            'angle': angle
+            'displacement': math.sqrt(math.pow(round(dx * 1000, 1), 2) + math.pow(round(dy * 1000, 1), 2)),
+            'angle': angle,
+            'trans_angle': trans_angle
 
         }
         stations_latest_data.append(temp)
@@ -428,7 +430,7 @@ def query_all_station_latest_data(request):
         dx = float(serializer.data[0]['dx'])
         dy = float(serializer.data[0]['dy'])
         radian = math.atan(math.fabs(dy / dx))
-        angle = radian_to_angle(radian, dx, dy)
+        angle, trans_angle = radian_to_angle(radian, dx, dy)
         i += 1
         temp = {
             'index': i,
@@ -440,28 +442,181 @@ def query_all_station_latest_data(request):
             'dx': round(dx * 1000, 1),
             'dy': round(dy * 1000, 1),
             'dh': round(float(serializer.data[0]['dh']) * 1000, 1),
-            'angle': angle
+            'displacement': math.sqrt(math.pow(round(dx * 1000, 1), 2) + math.pow(round(dy * 1000, 1), 2)),
+            'angle': angle,
+            'trans_angle': trans_angle
 
         }
         stations_latest_data.append(temp)
     return JsonResponse(stations_latest_data, safe=False)
 
 
+# 查询每个矿区各个测站点的最新数据
+@csrf_exempt
+def query_mine_all_stations(request):
+    mine_name = request.POST.get("mine_name")
+    query_date = request.POST.get("query_date")
+    stations_latest_data = []
+    if mine_name == 'XY':
+        query_data = XyStationsData.objects.filter(starttime__range=[query_date, query_date]) \
+            .exclude(stationname='XYJZ1').exclude(stationname='XYJZ2')
+        x_min = query_data.aggregate(Min('x'))
+        x_max = query_data.aggregate(Max('x'))
+        y_min = query_data.aggregate(Min('y'))
+        y_max = query_data.aggregate(Max('y'))
+        z_min = query_data.aggregate(Min('d3'))
+        z_max = query_data.aggregate(Max('d3'))
+        for item in query_data:
+            temp = {
+                'stationName': item.stationname,
+                'x': float(item.x),
+                'y': float(item.y),
+                'h': float(item.h),
+                'dx': float(item.dx),
+                'dy': float(item.dy),
+                'dh': float(item.dh),
+                'd2': float(item.d2),
+                'd3': -float(item.d3),
+                'x_min': float(y_min['y__min']),
+                'x_max': float(y_max['y__max']),
+                'y_min': float(x_min['x__min']),
+                'y_max': float(x_max['x__max']),
+                'z_min': -float(z_max['d3__max']),
+                'z_max': -float(z_min['d3__min'])
+            }
+            stations_latest_data.append(temp)
+    elif mine_name == 'XA':
+        query_data = XaStationsData.objects.filter(starttime__range=[query_date, query_date]) \
+            .exclude(stationname='XAJZ').exclude(stationname='XAJZ1')
+        x_min = query_data.aggregate(Min('x'))
+        x_max = query_data.aggregate(Max('x'))
+        y_min = query_data.aggregate(Min('y'))
+        y_max = query_data.aggregate(Max('y'))
+        z_min = query_data.aggregate(Min('d3'))
+        z_max = query_data.aggregate(Max('d3'))
+        for item in query_data:
+            temp = {
+                'stationName': item.stationname,
+                'x': float(item.x),
+                'y': float(item.y),
+                'h': float(item.h),
+                'dx': float(item.dx),
+                'dy': float(item.dy),
+                'dh': float(item.dh),
+                'd2': float(item.d2),
+                'd3': -float(item.d3),
+                'x_min': float(y_min['y__min']),
+                'x_max': float(y_max['y__max']),
+                'y_min': float(x_min['x__min']),
+                'y_max': float(x_max['x__max']),
+                'z_min': -float(z_max['d3__max']),
+                'z_max': -float(z_min['d3__min'])
+            }
+            stations_latest_data.append(temp)
+    else:
+        query_data = JdStationsData.objects.filter(starttime__range=[query_date, query_date]) \
+            .exclude(stationname='XAJZ').exclude(stationname='XAJZ1')
+        x_min = query_data.aggregate(Min('x'))
+        x_max = query_data.aggregate(Max('x'))
+        y_min = query_data.aggregate(Min('y'))
+        y_max = query_data.aggregate(Max('y'))
+        z_min = query_data.aggregate(Min('d3'))
+        z_max = query_data.aggregate(Max('d3'))
+        for item in query_data:
+            temp = {
+                'stationName': item.stationname,
+                'x': float(item.x),
+                'y': float(item.y),
+                'h': float(item.h),
+                'dx': float(item.dx),
+                'dy': float(item.dy),
+                'dh': float(item.dh),
+                'd2': float(item.d2),
+                'd3': -float(item.d3),
+                'x_min': float(y_min['y__min']),
+                'x_max': float(y_max['y__max']),
+                'y_min': float(x_min['x__min']),
+                'y_max': float(x_max['x__max']),
+                'z_min': -float(z_max['d3__max']),
+                'z_max': -float(z_min['d3__min'])
+            }
+            stations_latest_data.append(temp)
+    return JsonResponse(stations_latest_data, safe=False)
+
+
+# 查询矿区测站点数据
+def query_mine_station(dot_name, start_date, end_date):
+    if dot_name[0:2] == 'XA':
+        return query_mine_station_data(XaStationsData, XaStationsDataSerializer, dot_name, start_date, end_date)
+    elif dot_name[0:2] == 'XY':
+        return query_mine_station_data(XyStationsData, XyStationsDataSerializer, dot_name, start_date, end_date)
+    else:
+        return query_mine_station_data(JdStationsData, JdStationsDataSerializer, dot_name, start_date, end_date)
+
+
+# 查询益新矿测站点数据
+def query_mine_station_data(mine_name, serializer_name, dot_name , start_date, end_date):
+    query_data = mine_name.objects.filter(stationname=dot_name, starttime__range=[start_date, end_date]).all()
+    x_min = query_data.aggregate(Min('x'))
+    x_max = query_data.aggregate(Max('x'))
+    y_min = query_data.aggregate(Min('y'))
+    y_max = query_data.aggregate(Max('y'))
+    h_min = query_data.aggregate(Min('h'))
+    h_max = query_data.aggregate(Max('h'))
+    dx_min = query_data.aggregate(Min('dx'))
+    dx_max = query_data.aggregate(Max('dx'))
+    dy_min = query_data.aggregate(Min('dy'))
+    dy_max = query_data.aggregate(Max('dy'))
+    dh_min = query_data.aggregate(Min('dh'))
+    dh_max = query_data.aggregate(Max('dh'))
+    serializer = serializer_name(query_data, many=True)
+    return (query_data, x_min, x_max, y_min, y_max, h_min, h_max,
+            dx_min, dx_max, dy_min, dy_max, dh_min, dh_max, serializer)
+
+
+# 查询每个断面的各个测站点数据
+def query_section_stations_data(mine_name, serializer_name, section_stations, stations_latest_data, i):
+    for station_name in section_stations:
+        query_data = mine_name.objects.filter(stationname=station_name).order_by('-dataid')[:1]
+        serializer = serializer_name(query_data, many=True)
+        dx = float(serializer.data[0]['dx'])
+        dy = float(serializer.data[0]['dy'])
+        radian = math.atan(math.fabs(dy / dx))
+        angle, trans_angle = radian_to_angle(radian, dx, dy)
+        i += 1
+        temp = {
+            'index': i,
+            'section': 'XY断面1',
+            'stationName': serializer.data[0]['stationname'],
+            'endtime': serializer.data[0]['endtime'],
+            'b': serializer.data[0]['b'],
+            'l': serializer.data[0]['l'],
+            'dx': round(dx * 1000, 1),
+            'dy': round(dy * 1000, 1),
+            'dh': round(float(serializer.data[0]['dh']) * 1000, 1),
+            'displacement': math.sqrt(math.pow(round(dx * 1000, 1), 2) + math.pow(round(dy * 1000, 1), 2)),
+            'angle': angle,
+            'trans_angle': trans_angle
+
+        }
+        stations_latest_data.append(temp)
+
+
 # 弧度转角度
 def radian_to_angle(radian, dx, dy):
-    M_DEG = 57.2957795130823
-    angle = radian * M_DEG
+    m_deg = 57.2957795130823
+    angle = radian * m_deg
     a = math.floor(angle)
     b = (angle - a) * 60
     c = math.floor(b)
     d = (b - c) * 60
     angle = a + c / 100 + d / 10000
     if dx > 0 and dy > 0:
-        angle = angle
+        trans_angle = angle
     elif dx < 0 < dy:
-        angle = 180 - angle
+        trans_angle = 180 - angle
     elif dx < 0 and dy < 0:
-        angle = 180 + angle
+        trans_angle = 180 + angle
     else:
-        angle = 360 - angle
-    return round(angle, 2)
+        trans_angle = 360 - angle
+    return [round(angle, 2), round(trans_angle, 2)]
