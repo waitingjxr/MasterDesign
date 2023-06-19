@@ -4,6 +4,7 @@ import axios from 'axios';
 
 var map
 var transData_index = 0
+var PI = 3.141592
 
 export default function HGMap() {
 
@@ -56,14 +57,29 @@ export default function HGMap() {
     if(data.status === 0) {
       for (let k = 0; k < data.points.length; k++, transData_index++) {
         // let point = new window.BMapGL.Point(data.points[k])
+        let arrayLength = transData.current[transData_index]['displacement'] * 0.000005
+        let arrayX = data.points[k]['lng'] + arrayLength * Math.cos(transData.current[transData_index]['angle'] * PI / 180) 
+        let arrayY = data.points[k]['lat'] + arrayLength * Math.sin(transData.current[transData_index]['angle'] * PI / 180)
+        
+        // let iconWidth = transData.current[transData_index]['displacement']
+        // let iconHeight = 15
+        // let angleIcon = new window.BMapGL.Icon("src/resources/images/arrow.png",
+        //   new window.BMapGL.Size(iconWidth, iconHeight))
         let pointMarker = new window.BMapGL.Marker(data.points[k])
+        let arrow = new window.BMapGL.Polyline([ 
+          data.points[k],
+          new window.BMapGL.Point(arrayX, arrayY) 
+        ], {
+          strokeColor: "pink",
+          strokeWeight: 8,
+          strokeOpacity: 1
+        })
         tempMap.addOverlay(pointMarker)
-        // 创建信息窗口
+        tempMap.addOverlay(arrow)
         let opts = {
           width: 300,
           height: 200,
           title: '表面位移监测 - '+ transData.current[transData_index]['stationName']
-          // title: <p style={{borderColor: 'bal'}}>表面位移监测 - {transData.current[transData_index]['stationName']}</p>
         }
         let infoWindow = new window.BMapGL.InfoWindow(
           '断面名称: ' + transData.current[transData_index]['section'] +
@@ -71,7 +87,7 @@ export default function HGMap() {
           '<br>ΔY: ' + transData.current[transData_index]['dy'] + ' mm' +
           '<br>ΔH: ' + transData.current[transData_index]['dh'] + ' mm' +
           '<br>位移: ' + transData.current[transData_index]['displacement'] + ' mm' +
-          '<br>方位角: ' + transData.current[transData_index]['angle'] + '°' +
+          '<br>方位角: ' + transData.current[transData_index]['trans_angle'] + '°' +
           '<br>监测时间: ' + transData.current[transData_index]['endtime']
         , opts)
         pointMarker.addEventListener('click', function () {

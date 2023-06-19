@@ -3,9 +3,9 @@ import { lazy } from "react"
 import { Navigate } from 'react-router-dom'
 import HGMap from '../components/home/sliderMenu/HG_Map'
 import WYChangeChart from '../components/home/sliderMenu/bmwy_monitor/WYChangeChart'
-import ScatterPlot from '../components/home/sliderMenu/bmwy_monitor/Scatter_Plot'
 import PlanarVector from '../components/home/sliderMenu/bmwy_monitor/Planar_Vector'
 import SpaceDisplacement from '../components/home/sliderMenu/bmwy_monitor/Space_Displacement'
+import SpaceSurface from '../components/home/sliderMenu/bmwy_monitor/Space_Surface'
 import BMWYDataList from '../components/home/sliderMenu/bmwy_monitor/datalist/Data_List'
 import ChangeLine from '../components/home/sliderMenu/nbwy_monitor/Change_Line'
 import NBWYDataList from '../components/home/sliderMenu/nbwy_monitor/datalist/Data_List'
@@ -51,16 +51,16 @@ const routes = [
         element: withLoadingComponent(<WYChangeChart />)
       },
       {
-        path: "/home/bmwy_monitor/scatter_plot",
-        element: withLoadingComponent(<ScatterPlot />)
-      },
-      {
         path: "/home/bmwy_monitor/planar_vector",
         element: withLoadingComponent(<PlanarVector />)
       },
       {
         path: "/home/bmwy_monitor/space_displacement",
         element: withLoadingComponent(<SpaceDisplacement />)
+      },
+      {
+        path: "/home/bmwy_monitor/space_surface",
+        element: withLoadingComponent(<SpaceSurface />)
       },
       {
         path: "/home/bmwy_monitor/data_list",

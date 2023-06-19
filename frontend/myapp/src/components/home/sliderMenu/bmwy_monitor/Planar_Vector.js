@@ -1,22 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { TreeSelect, Select, DatePicker, Button, message } from 'antd';
+import { TreeSelect, DatePicker, Button, message } from 'antd';
 import locale from 'antd/es/date-picker/locale/zh_CN';
 import axios from 'axios';
 import * as echarts from 'echarts'
 
 export default function Planar_Vector() {
-  var data_type = [
-    { value: 'time_6h', label: '6小时数据',}, { value: 'time_12h', label: '12小时数据',},
-    { value: 'time_all', label: '实时数据',},
-  ]
   const [dot_data, setDotData] = useState([])  // 树形断面点数据
   const [dot_name, setDotName] = useState(undefined);  // 选中的断面点
-  const [time_type, setTimeType] = useState()  // 时间数据类型
   const [start_date, setStartDate] = useState()  // 开始日期
   const [end_date, setEndDate] = useState()  // 结束日期
   const station_planar_vector_data = useRef()  // 断面点的空间变化数据
-  const [myChart, setMyChart] = useState()
-  // var option  // 3D散点图配置
+  const myChart = useRef()
   var x_min   // Y坐标最小值
   var x_max   // Y坐标最大值
   var y_min   // X坐标最小值
@@ -40,11 +34,6 @@ export default function Planar_Vector() {
     setDotName(newValue);
   };
 
-  // 获取时间数据类型
-  const handleTimeType = (value) => {
-    setTimeType(value)
-  }
-
   // 获取开始日期
   const handleStartDate = (date, dateString) => {
     setStartDate(dateString)
@@ -63,7 +52,6 @@ export default function Planar_Vector() {
       url: 'http://127.0.0.1:8001/api/section_point/queryScatterData', 
       data:{
         dot_name: dot_name,
-        time_type: time_type,
         start_date: start_date,
         end_date: end_date,
       },
@@ -81,76 +69,89 @@ export default function Planar_Vector() {
         return {
           'id': i,
           'value': [item['Y'], item['X']],
-          'category': item['category']
+          'category': item['category'],
+          'tooltip': [item['X'], item['Y'], item['E方向'], item['N方向']]
         }
       })
       links.pop() 
       station_planar_vector_data.current = res.data.data
-      x_min = station_planar_vector_data.current[0]['dataX_min']
-      x_max = station_planar_vector_data.current[0]['dataX_max']
-      y_min = station_planar_vector_data.current[0]['dataY_min']
-      y_max = station_planar_vector_data.current[0]['dataY_max']
-      setMyChart(echarts.getInstanceByDom(document.getElementById('planarVector')))
-      if (myChart == null) {
-        setMyChart(echarts.init(document.getElementById('planarVector'), null, {
-          width: 950,
-          height: 550
-        }))
+      x_min = station_planar_vector_data.current[0]['x_min']
+      x_max = station_planar_vector_data.current[0]['x_max']
+      y_min = station_planar_vector_data.current[0]['y_min']
+      y_max = station_planar_vector_data.current[0]['y_max']
+      myChart.current = echarts.getInstanceByDom(document.getElementById('planarVector'))
+      if (myChart.current == null) {
+        myChart.current = echarts.init(document.getElementById('planarVector'), null, {
+          width: 1000,
+          height: 600,
+        })
       }
-      myChart.setOption({
-          xAxis: {
-            type: 'value',
-            name: 'E方向',
-            min: y_min,
-            max: y_max,
-          },
-          yAxis: {
-            type: 'value',
-            name: 'N方向',
-            min: x_min,
-            max: x_max,
-          },
-          legend: [{ data: ['起始点', '历史点', '结束点']}],
-          tooltip: [{
-            show: true,
-            formatter: function (a) {
-              if (a.dataType === 'node'){
-                let content = a.data.category
-                content += '<br/>'
-                content +='x: '
-                content += a.value[1]
-                content += ' m'
-                content += '<br/>'
-                content += 'y: '
-                content += a.value[0]
-                content += ' m'
-                content += '<br/>'
-                return content
-              }
+      myChart.current.setOption({
+        grid: { left: '11%'},
+        xAxis: {
+          type: 'value',
+          name: 'E方向',
+          min: y_min,
+          max: y_max,
+        },
+        yAxis: {
+          type: 'value',
+          name: 'N方向',
+          min: x_min,
+          max: x_max,
+        },
+        legend: [{ 
+          top: 15,
+          data: ['起始点', '历史点', '结束点']
+        }],
+        tooltip: [{
+          show: true,
+          formatter: function (a) {
+            if (a.dataType === 'node'){
+              let content = a.data.category
+              content += '<br/>'
+              content += 'x: '
+              content += a.data.tooltip[0]
+              content += ' m'
+              content += '<br/>'
+              content += 'y: '
+              content += a.data.tooltip[1]
+              content += ' m'
+              content += '<br/>'
+              content += 'E方向: '
+              content += a.data.tooltip[2]
+              content += ' mm'
+              content += '<br/>'
+              content += 'N方向: '
+              content += a.data.tooltip[3]
+              content += ' mm'
+              content += '<br/>'
+              return content
             }
-          }],
-          series: [{
-            type: 'graph',
-            layout: 'none',
-            coordinateSystem: 'cartesian2d',
-            symbolSize: 8,
-            edgeSymbol: ['circle', 'arrow'],
-            edgeSymbolSize: [4, 10],
-            data: points,
-            links: links,
-            categories: [
-              { name: '起始点' },
-              { 
-                name: '历史点',
+          }
+        }],
+        series: [{
+          type: 'graph',
+          layout: 'none',
+          coordinateSystem: 'cartesian2d',
+          symbolSize: 8,
+          edgeSymbol: ['circle', 'arrow'],
+          edgeSymbolSize: [4, 8],
+          data: points,
+          links: links,
+          categories: [
+            { name: '起始点' },
+            { 
+              name: '历史点',
+            },
+            { 
+              name: '结束点',
+              itemStyle: {
+                color: "rgb(154, 96, 180)"
+              }
               },
-              { 
-                name: '结束点',
-                itemStyle: {
-                  color: "rgb(154, 96, 180)"
-                }
-               },
-            ]
-          }]
+          ]
+        }]
       }, true, true)
     }).catch(function (error) {
       message.error(error)
@@ -167,17 +168,13 @@ export default function Planar_Vector() {
           allowClear showSearch
           value={dot_name} onChange={onChange} treeData={dot_data}
         />&nbsp;&nbsp;&nbsp;&nbsp;
-        <span>数据类型:</span>&nbsp;
-        <Select defaultValue="" style={{ width: 120 }}
-          onChange={handleTimeType} options={data_type}
-        />&nbsp;&nbsp;&nbsp;&nbsp;
         <span>开始日期:</span>&nbsp;
         <DatePicker locale={locale} onChange={handleStartDate} />&nbsp;&nbsp;&nbsp;&nbsp;
         <span>结束日期:</span>&nbsp;
         <DatePicker locale={locale} onChange={handleEndDate} />&nbsp;&nbsp;&nbsp;&nbsp;
         <Button type="primary" onClick={handleQuery}>查询</Button>
       </div>
-      <div id="planarVector" style={{ margin: '50px 0 0 50px', width:'950px', height: '550px', background:'rgb(245, 245, 245)'}}>
+      <div id="planarVector" style={{ margin: '50px 0 0 50px', width:'950px', height: '600px', background:'rgb(245, 245, 245)'}}>
         
       </div>
     </div>
