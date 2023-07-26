@@ -4,7 +4,7 @@ import locale from 'antd/es/date-picker/locale/zh_CN';
 import axios from 'axios';
 import * as echarts from 'echarts'
 
-export default function Planar_Vector() {
+export default function PlanarVector() {
   const [dot_data, setDotData] = useState([])  // 树形断面点数据
   const [dot_name, setDotName] = useState(undefined);  // 选中的断面点
   const [start_date, setStartDate] = useState()  // 开始日期
@@ -73,6 +73,7 @@ export default function Planar_Vector() {
           'tooltip': [item['X'], item['Y'], item['E方向'], item['N方向']]
         }
       })
+      
       links.pop() 
       station_planar_vector_data.current = res.data.data
       x_min = station_planar_vector_data.current[0]['x_min']

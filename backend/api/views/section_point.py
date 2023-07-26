@@ -237,6 +237,8 @@ def query_space_displacement_data(request):
 
 # 查询每个断面点的最新数据
 def query_all_station_latest_data(request):
+    xy_base_stations_name = ['XYJZ1', 'XYJZ2']
+    xa_base_stations_name = ['XAJZ', 'XAJZ1']
     xy_section1_stations_name = ['XY1', 'XY2', 'XY3', 'XY11']
     xy_section2_stations_name = ['XY6', 'XY7', 'XY9', 'XY10', 'XY12']
     xy_section3_stations_name = ['XY4', 'XY5', 'XY8']
@@ -247,6 +249,7 @@ def query_all_station_latest_data(request):
     jd_section1_stations_name = ['JD01', 'JD02', 'JD03', 'JD04', 'JD05', 'JD07', 'JD09', 'JD10', 'JD11']
     stations_latest_data = []
     i = 0
+
     # YX断面1
     # query_section_stations_data(XyStationsData, XyStationsDataSerializer, xy_section1_stations_name, i)
     for station_name in xy_section1_stations_name:
@@ -256,6 +259,12 @@ def query_all_station_latest_data(request):
         dy = float(serializer.data[0]['dy'])
         radian = math.atan(math.fabs(dy / dx))
         angle, trans_angle = radian_to_angle(radian, dx, dy)
+        x_min = query_data.aggregate(Min('x'))
+        x_max = query_data.aggregate(Max('x'))
+        y_min = query_data.aggregate(Min('y'))
+        y_max = query_data.aggregate(Max('y'))
+        z_min = query_data.aggregate(Min('dh'))
+        z_max = query_data.aggregate(Max('dh'))
         i += 1
         temp = {
             'index': i,
@@ -269,7 +278,13 @@ def query_all_station_latest_data(request):
             'dh': round(float(serializer.data[0]['dh']) * 1000, 1),
             'displacement': math.sqrt(math.pow(round(dx * 1000, 1), 2) + math.pow(round(dy * 1000, 1), 2)),
             'angle': angle,
-            'trans_angle': trans_angle
+            'trans_angle': trans_angle,
+            'x_min': float(y_min['y__min']),
+            'x_max': float(y_max['y__max']),
+            'y_min': float(x_min['x__min']),
+            'y_max': float(x_max['x__max']),
+            'z_min': float(z_min['dh__min']),
+            'z_max': float(z_max['dh__max'])
 
         }
         stations_latest_data.append(temp)
@@ -281,6 +296,12 @@ def query_all_station_latest_data(request):
         dy = float(serializer.data[0]['dy'])
         radian = math.atan(math.fabs(dy / dx))
         angle, trans_angle = radian_to_angle(radian, dx, dy)
+        x_min = query_data.aggregate(Min('x'))
+        x_max = query_data.aggregate(Max('x'))
+        y_min = query_data.aggregate(Min('y'))
+        y_max = query_data.aggregate(Max('y'))
+        z_min = query_data.aggregate(Min('dh'))
+        z_max = query_data.aggregate(Max('dh'))
         i += 1
         temp = {
             'index': i,
@@ -294,7 +315,13 @@ def query_all_station_latest_data(request):
             'dh': round(float(serializer.data[0]['dh']) * 1000, 1),
             'displacement': math.sqrt(math.pow(round(dx * 1000, 1), 2) + math.pow(round(dy * 1000, 1), 2)),
             'angle': angle,
-            'trans_angle': trans_angle
+            'trans_angle': trans_angle,
+            'x_min': float(y_min['y__min']),
+            'x_max': float(y_max['y__max']),
+            'y_min': float(x_min['x__min']),
+            'y_max': float(x_max['x__max']),
+            'z_min': float(z_min['dh__min']),
+            'z_max': float(z_max['dh__max'])
 
         }
         stations_latest_data.append(temp)
@@ -306,6 +333,12 @@ def query_all_station_latest_data(request):
         dy = float(serializer.data[0]['dy'])
         radian = math.atan(math.fabs(dy / dx))
         angle, trans_angle = radian_to_angle(radian, dx, dy)
+        x_min = query_data.aggregate(Min('x'))
+        x_max = query_data.aggregate(Max('x'))
+        y_min = query_data.aggregate(Min('y'))
+        y_max = query_data.aggregate(Max('y'))
+        z_min = query_data.aggregate(Min('dh'))
+        z_max = query_data.aggregate(Max('dh'))
         i += 1
         temp = {
             'index': i,
@@ -319,7 +352,13 @@ def query_all_station_latest_data(request):
             'dh': round(float(serializer.data[0]['dh']) * 1000, 1),
             'displacement': math.sqrt(math.pow(round(dx * 1000, 1), 2) + math.pow(round(dy * 1000, 1), 2)),
             'angle': angle,
-            'trans_angle': trans_angle
+            'trans_angle': trans_angle,
+            'x_min': float(y_min['y__min']),
+            'x_max': float(y_max['y__max']),
+            'y_min': float(x_min['x__min']),
+            'y_max': float(x_max['x__max']),
+            'z_min': float(z_min['dh__min']),
+            'z_max': float(z_max['dh__max'])
 
         }
         stations_latest_data.append(temp)
@@ -331,6 +370,12 @@ def query_all_station_latest_data(request):
         dy = float(serializer.data[0]['dy'])
         radian = math.atan(math.fabs(dy / dx))
         angle, trans_angle = radian_to_angle(radian, dx, dy)
+        x_min = query_data.aggregate(Min('x'))
+        x_max = query_data.aggregate(Max('x'))
+        y_min = query_data.aggregate(Min('y'))
+        y_max = query_data.aggregate(Max('y'))
+        z_min = query_data.aggregate(Min('dh'))
+        z_max = query_data.aggregate(Max('dh'))
         i += 1
         temp = {
             'index': i,
@@ -344,7 +389,13 @@ def query_all_station_latest_data(request):
             'dh': round(float(serializer.data[0]['dh']) * 1000, 1),
             'displacement': math.sqrt(math.pow(round(dx * 1000, 1), 2) + math.pow(round(dy * 1000, 1), 2)),
             'angle': angle,
-            'trans_angle': trans_angle
+            'trans_angle': trans_angle,
+            'x_min': float(y_min['y__min']),
+            'x_max': float(y_max['y__max']),
+            'y_min': float(x_min['x__min']),
+            'y_max': float(x_max['x__max']),
+            'z_min': float(z_min['dh__min']),
+            'z_max': float(z_max['dh__max'])
 
         }
         stations_latest_data.append(temp)
@@ -356,6 +407,12 @@ def query_all_station_latest_data(request):
         dy = float(serializer.data[0]['dy'])
         radian = math.atan(math.fabs(dy / dx))
         angle, trans_angle = radian_to_angle(radian, dx, dy)
+        x_min = query_data.aggregate(Min('x'))
+        x_max = query_data.aggregate(Max('x'))
+        y_min = query_data.aggregate(Min('y'))
+        y_max = query_data.aggregate(Max('y'))
+        z_min = query_data.aggregate(Min('dh'))
+        z_max = query_data.aggregate(Max('dh'))
         i += 1
         temp = {
             'index': i,
@@ -369,7 +426,13 @@ def query_all_station_latest_data(request):
             'dh': round(float(serializer.data[0]['dh']) * 1000, 1),
             'displacement': math.sqrt(math.pow(round(dx * 1000, 1), 2) + math.pow(round(dy * 1000, 1), 2)),
             'angle': angle,
-            'trans_angle': trans_angle
+            'trans_angle': trans_angle,
+            'x_min': float(y_min['y__min']),
+            'x_max': float(y_max['y__max']),
+            'y_min': float(x_min['x__min']),
+            'y_max': float(x_max['x__max']),
+            'z_min': float(z_min['dh__min']),
+            'z_max': float(z_max['dh__max'])
 
         }
         stations_latest_data.append(temp)
@@ -381,6 +444,12 @@ def query_all_station_latest_data(request):
         dy = float(serializer.data[0]['dy'])
         radian = math.atan(math.fabs(dy / dx))
         angle, trans_angle = radian_to_angle(radian, dx, dy)
+        x_min = query_data.aggregate(Min('x'))
+        x_max = query_data.aggregate(Max('x'))
+        y_min = query_data.aggregate(Min('y'))
+        y_max = query_data.aggregate(Max('y'))
+        z_min = query_data.aggregate(Min('dh'))
+        z_max = query_data.aggregate(Max('dh'))
         i += 1
         temp = {
             'index': i,
@@ -394,7 +463,13 @@ def query_all_station_latest_data(request):
             'dh': round(float(serializer.data[0]['dh']) * 1000, 1),
             'displacement': math.sqrt(math.pow(round(dx * 1000, 1), 2) + math.pow(round(dy * 1000, 1), 2)),
             'angle': angle,
-            'trans_angle': trans_angle
+            'trans_angle': trans_angle,
+            'x_min': float(y_min['y__min']),
+            'x_max': float(y_max['y__max']),
+            'y_min': float(x_min['x__min']),
+            'y_max': float(x_max['x__max']),
+            'z_min': float(z_min['dh__min']),
+            'z_max': float(z_max['dh__max'])
 
         }
         stations_latest_data.append(temp)
@@ -406,6 +481,12 @@ def query_all_station_latest_data(request):
         dy = float(serializer.data[0]['dy'])
         radian = math.atan(math.fabs(dy / dx))
         angle, trans_angle = radian_to_angle(radian, dx, dy)
+        x_min = query_data.aggregate(Min('x'))
+        x_max = query_data.aggregate(Max('x'))
+        y_min = query_data.aggregate(Min('y'))
+        y_max = query_data.aggregate(Max('y'))
+        z_min = query_data.aggregate(Min('dh'))
+        z_max = query_data.aggregate(Max('dh'))
         i += 1
         temp = {
             'index': i,
@@ -419,7 +500,13 @@ def query_all_station_latest_data(request):
             'dh': round(float(serializer.data[0]['dh']) * 1000, 1),
             'displacement': math.sqrt(math.pow(round(dx * 1000, 1), 2) + math.pow(round(dy * 1000, 1), 2)),
             'angle': angle,
-            'trans_angle': trans_angle
+            'trans_angle': trans_angle,
+            'x_min': float(y_min['y__min']),
+            'x_max': float(y_max['y__max']),
+            'y_min': float(x_min['x__min']),
+            'y_max': float(x_max['x__max']),
+            'z_min': float(z_min['dh__min']),
+            'z_max': float(z_max['dh__max'])
 
         }
         stations_latest_data.append(temp)
@@ -431,6 +518,12 @@ def query_all_station_latest_data(request):
         dy = float(serializer.data[0]['dy'])
         radian = math.atan(math.fabs(dy / dx))
         angle, trans_angle = radian_to_angle(radian, dx, dy)
+        x_min = query_data.aggregate(Min('x'))
+        x_max = query_data.aggregate(Max('x'))
+        y_min = query_data.aggregate(Min('y'))
+        y_max = query_data.aggregate(Max('y'))
+        z_min = query_data.aggregate(Min('dh')) 
+        z_max = query_data.aggregate(Max('dh'))
         i += 1
         temp = {
             'index': i,
@@ -444,7 +537,55 @@ def query_all_station_latest_data(request):
             'dh': round(float(serializer.data[0]['dh']) * 1000, 1),
             'displacement': math.sqrt(math.pow(round(dx * 1000, 1), 2) + math.pow(round(dy * 1000, 1), 2)),
             'angle': angle,
-            'trans_angle': trans_angle
+            'trans_angle': trans_angle,
+            'x_min': float(y_min['y__min']),
+            'x_max': float(y_max['y__max']),
+            'y_min': float(x_min['x__min']),
+            'y_max': float(x_max['x__max']),
+            'z_min': float(z_min['dh__min']),
+            'z_max': float(z_max['dh__max'])
+
+        }
+        stations_latest_data.append(temp)
+    # 益新矿基准测站点
+    for station_name in xy_base_stations_name:
+        query_data = XyStationsData.objects.filter(stationname=station_name).order_by('-dataid')[:1]
+        serializer = XyStationsDataSerializer(query_data, many=True)
+        i += 1
+        temp = {
+            'index': i,
+            'section': 'XY断面1',
+            'stationName': serializer.data[0]['stationname'],
+            'endtime': serializer.data[0]['endtime'],
+            'b': serializer.data[0]['b'],
+            'l': serializer.data[0]['l'],
+            'dx': 0,
+            'dy': 0,
+            'dh': 0,
+            'displacement': 0,
+            'angle': 0,
+            'trans_angle': 0
+
+        }
+        stations_latest_data.append(temp)
+    # 兴安矿和峻德矿基准测站点
+    for station_name in xa_base_stations_name:
+        query_data = XaStationsData.objects.filter(stationname=station_name).order_by('-dataid')[:1]
+        serializer = XaStationsDataSerializer(query_data, many=True)
+        i += 1
+        temp = {
+            'index': i,
+            'section': 'XY断面1',
+            'stationName': serializer.data[0]['stationname'],
+            'endtime': serializer.data[0]['endtime'],
+            'b': serializer.data[0]['b'],
+            'l': serializer.data[0]['l'],
+            'dx': 0,
+            'dy': 0,
+            'dh': 0,
+            'displacement': 0,
+            'angle': 0,
+            'trans_angle': 0
 
         }
         stations_latest_data.append(temp)
@@ -464,8 +605,8 @@ def query_mine_all_stations(request):
         x_max = query_data.aggregate(Max('x'))
         y_min = query_data.aggregate(Min('y'))
         y_max = query_data.aggregate(Max('y'))
-        z_min = query_data.aggregate(Min('d3'))
-        z_max = query_data.aggregate(Max('d3'))
+        z_min = query_data.aggregate(Min('dh'))
+        z_max = query_data.aggregate(Max('dh'))
         for item in query_data:
             temp = {
                 'stationName': item.stationname,
@@ -481,8 +622,8 @@ def query_mine_all_stations(request):
                 'x_max': float(y_max['y__max']),
                 'y_min': float(x_min['x__min']),
                 'y_max': float(x_max['x__max']),
-                'z_min': -float(z_max['d3__max']),
-                'z_max': -float(z_min['d3__min'])
+                'z_min': float(z_min['dh__min']),
+                'z_max': float(z_max['dh__max'])
             }
             stations_latest_data.append(temp)
     elif mine_name == 'XA':
@@ -492,8 +633,8 @@ def query_mine_all_stations(request):
         x_max = query_data.aggregate(Max('x'))
         y_min = query_data.aggregate(Min('y'))
         y_max = query_data.aggregate(Max('y'))
-        z_min = query_data.aggregate(Min('d3'))
-        z_max = query_data.aggregate(Max('d3'))
+        z_min = query_data.aggregate(Min('dh'))
+        z_max = query_data.aggregate(Max('dh'))
         for item in query_data:
             temp = {
                 'stationName': item.stationname,
@@ -509,8 +650,8 @@ def query_mine_all_stations(request):
                 'x_max': float(y_max['y__max']),
                 'y_min': float(x_min['x__min']),
                 'y_max': float(x_max['x__max']),
-                'z_min': -float(z_max['d3__max']),
-                'z_max': -float(z_min['d3__min'])
+                'z_min': float(z_min['dh__min']),
+                'z_max': float(z_max['dh__max'])
             }
             stations_latest_data.append(temp)
     else:
@@ -520,8 +661,8 @@ def query_mine_all_stations(request):
         x_max = query_data.aggregate(Max('x'))
         y_min = query_data.aggregate(Min('y'))
         y_max = query_data.aggregate(Max('y'))
-        z_min = query_data.aggregate(Min('d3'))
-        z_max = query_data.aggregate(Max('d3'))
+        z_min = query_data.aggregate(Min('dh'))
+        z_max = query_data.aggregate(Max('dh'))
         for item in query_data:
             temp = {
                 'stationName': item.stationname,
@@ -537,8 +678,8 @@ def query_mine_all_stations(request):
                 'x_max': float(y_max['y__max']),
                 'y_min': float(x_min['x__min']),
                 'y_max': float(x_max['x__max']),
-                'z_min': -float(z_max['d3__max']),
-                'z_max': -float(z_min['d3__min'])
+                'z_min': float(z_min['dh__min']),
+                'z_max': float(z_max['dh__max'])
             }
             stations_latest_data.append(temp)
     return JsonResponse(stations_latest_data, safe=False)
@@ -554,7 +695,7 @@ def query_mine_station(dot_name, start_date, end_date):
         return query_mine_station_data(JdStationsData, JdStationsDataSerializer, dot_name, start_date, end_date)
 
 
-# 查询益新矿测站点数据
+# 查询指定矿区测站点数据
 def query_mine_station_data(mine_name, serializer_name, dot_name , start_date, end_date):
     query_data = mine_name.objects.filter(stationname=dot_name, starttime__range=[start_date, end_date]).all()
     x_min = query_data.aggregate(Min('x'))

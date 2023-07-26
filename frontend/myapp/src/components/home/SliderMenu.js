@@ -36,7 +36,8 @@ const items = [
   getItem('矿区实景图', '/home/hg_map', <PieChartOutlined />),
   getItem('表面位移监测', 'bmwy_monitor', <BorderOuterOutlined />, [
     getItem('位移变化趋势图', '/home/bmwy_monitor/wyChange_chart', <LineChartOutlined />),
-    getItem('平面矢量图', '/home/bmwy_monitor/planar_vector ', <DotChartOutlined />),
+    getItem('平面矢量图', '/home/bmwy_monitor/planar_vector', <DotChartOutlined />),
+    getItem('平面等值图', '/home/bmwy_monitor/planar_contour', <AreaChartOutlined />),
     getItem('空间位移图', '/home/bmwy_monitor/space_displacement', <DotChartOutlined />),
     getItem('空间曲面图', '/home/bmwy_monitor/space_surface', <AreaChartOutlined />),
     getItem('数据列表', '/home/bmwy_monitor/data_list', <UnorderedListOutlined />),

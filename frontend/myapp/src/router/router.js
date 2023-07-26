@@ -4,6 +4,7 @@ import { Navigate } from 'react-router-dom'
 import HGMap from '../components/home/sliderMenu/HG_Map'
 import WYChangeChart from '../components/home/sliderMenu/bmwy_monitor/WYChangeChart'
 import PlanarVector from '../components/home/sliderMenu/bmwy_monitor/Planar_Vector'
+import PlanarContour from '../components/home/sliderMenu/bmwy_monitor/Planar_Contour'
 import SpaceDisplacement from '../components/home/sliderMenu/bmwy_monitor/Space_Displacement'
 import SpaceSurface from '../components/home/sliderMenu/bmwy_monitor/Space_Surface'
 import BMWYDataList from '../components/home/sliderMenu/bmwy_monitor/datalist/Data_List'
@@ -53,6 +54,10 @@ const routes = [
       {
         path: "/home/bmwy_monitor/planar_vector",
         element: withLoadingComponent(<PlanarVector />)
+      },
+      {
+        path: "/home/bmwy_monitor/planar_contour",
+        element: withLoadingComponent(<PlanarContour />)
       },
       {
         path: "/home/bmwy_monitor/space_displacement",
