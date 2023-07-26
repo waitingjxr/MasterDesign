@@ -1,0 +1,21 @@
+.home_head{
+  height: 50px;
+  width: 100%;
+  background-color: rgb(254, 254, 254);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgb(240, 240, 240); 
+  z-index: 100;
+  .logo{
+    display: flex;
+    align-items: center;
+    
+  }
+  .img_logo{
+    height: 45px;
+  }
+  .user_login{
+    margin-left: -50px;
+  }
+}
